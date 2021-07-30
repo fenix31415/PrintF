@@ -1,3 +1,5 @@
+#include "PrintF.h"
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
 #ifndef NDEBUG
@@ -45,11 +47,23 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 	return true;
 }
 
+RE::BSFixedString PrintFArr(RE::StaticFunctionTag*, RE::BSFixedString format, const std::vector<RE::BSFixedString> params)
+{
+	return Fprint(format.c_str(), params);
+}
+
+bool RegisterFuncs(RE::BSScript::IVirtualMachine* a_vm)
+{
+	a_vm->RegisterFunction("PrintFArr", "f314PF_PrintF", PrintFArr);
+	return true;
+}
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
-	logger::info("loaded");
-
 	SKSE::Init(a_skse);
-
+	auto papyrus = SKSE::GetPapyrusInterface();
+	if (!papyrus->Register(RegisterFuncs)) {
+		return false;
+	}
 	return true;
 }

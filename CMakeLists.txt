@@ -31,7 +31,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STR
 # ---- Project ----
 
 project(
-	ExampleProject
+	PrintF
 	VERSION 1.0.0
 	LANGUAGES CXX
 )
@@ -79,13 +79,20 @@ set(Boost_USE_STATIC_LIBS ON)
 
 # ---- Dependencies ----
 
-add_subdirectory("extern/CommonLibSSE" CommonLibSSE)
+add_subdirectory($ENV{CommonLibSSE} $ENV{CommonLibSSE}/build)
 
 find_package(spdlog REQUIRED CONFIG)
 
 # ---- Add source files ----
 
+set(HEADERS
+	src/PrintF.h
+	src/sPrintF.h
+)
+
 set(SOURCES
+	src/PrintF.cpp
+	src/sPrintF.cpp
 	src/main.cpp
 	src/PCH.h
 )
