@@ -52,18 +52,73 @@ template class params_string<RE::BSFixedString>;
 
 RE::BSFixedString PrintFStr(RE::StaticFunctionTag*, const RE::BSFixedString format, const RE::BSFixedString params)
 {
-	params_string<RE::BSFixedString> params_storage(params.c_str());
-	return Fprint(format.c_str(), params_storage);
+	return Fprints(format.c_str(), params);
 }
 
 RE::BSFixedString PrintFArr(RE::StaticFunctionTag*, const RE::BSFixedString format, const std::vector<RE::BSFixedString> params)
 {
-	params_array<RE::BSFixedString> params_storage(params.begin(), params.end());
-	return Fprint(format.c_str(), params_storage);
+	return Fprinta(format.c_str(), params);
+}
+
+RE::BSFixedString PrintF9(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4
+	, const RE::BSFixedString a5, const RE::BSFixedString a6, const RE::BSFixedString a7, const RE::BSFixedString a8
+	, const RE::BSFixedString a9) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+RE::BSFixedString PrintF8(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4
+	, const RE::BSFixedString a5, const RE::BSFixedString a6, const RE::BSFixedString a7, const RE::BSFixedString a8) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4, a5, a6, a7, a8);
+}
+RE::BSFixedString PrintF7(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4
+	, const RE::BSFixedString a5, const RE::BSFixedString a6, const RE::BSFixedString a7) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4, a5, a6, a7);
+}
+RE::BSFixedString PrintF6(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4
+	, const RE::BSFixedString a5, const RE::BSFixedString a6) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4, a5, a6);
+}
+RE::BSFixedString PrintF5(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4
+	, const RE::BSFixedString a5) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4, a5);
+}
+RE::BSFixedString PrintF4(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3, const RE::BSFixedString a4) {
+	return Fprintv(format.c_str(), a1, a2, a3, a4);
+}
+RE::BSFixedString PrintF3(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2, const RE::BSFixedString a3) {
+	return Fprintv(format.c_str(), a1, a2, a3);
+}
+RE::BSFixedString PrintF2(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1, const RE::BSFixedString a2) {
+	return Fprintv(format.c_str(), a1, a2);
+}
+RE::BSFixedString PrintF1(RE::StaticFunctionTag*, const RE::BSFixedString format
+	, const RE::BSFixedString a1) {
+	return Fprintv(format.c_str(), a1);
+}
+RE::BSFixedString PrintF0(RE::StaticFunctionTag*, const RE::BSFixedString format) {
+	return Fprintv(format.c_str());
 }
 
 bool RegisterFuncs(RE::BSScript::IVirtualMachine* a_vm)
 {
+	a_vm->RegisterFunction("PrintF0", "f314PF_PrintF", PrintF0);
+	a_vm->RegisterFunction("PrintF1", "f314PF_PrintF", PrintF1);
+	a_vm->RegisterFunction("PrintF2", "f314PF_PrintF", PrintF2);
+	a_vm->RegisterFunction("PrintF3", "f314PF_PrintF", PrintF3);
+	a_vm->RegisterFunction("PrintF4", "f314PF_PrintF", PrintF4);
+	a_vm->RegisterFunction("PrintF5", "f314PF_PrintF", PrintF5);
+	a_vm->RegisterFunction("PrintF6", "f314PF_PrintF", PrintF6);
+	a_vm->RegisterFunction("PrintF7", "f314PF_PrintF", PrintF7);
+	a_vm->RegisterFunction("PrintF8", "f314PF_PrintF", PrintF8);
+	a_vm->RegisterFunction("PrintF9", "f314PF_PrintF", PrintF9);
+
 	a_vm->RegisterFunction("PrintFArr", "f314PF_PrintF", PrintFArr);
 	a_vm->RegisterFunction("PrintFStr", "f314PF_PrintF", PrintFStr);
 	return true;

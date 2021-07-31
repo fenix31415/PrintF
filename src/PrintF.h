@@ -91,11 +91,8 @@ auto parse<TokenType::_char>(const char* arg, bool defaultmode) {
 }
 
 
-template<typename T, typename Enabled = void>
-class params_t;
-
 template<typename T>
-class params_t<T, typename std::enable_if<HasToString<T>::value>::type> {
+class params_t {
 public:
 	virtual const char* next() { return nullptr; }
 	virtual bool end() const { return true; }
@@ -105,11 +102,8 @@ public:
 	params_t& operator=(const params_t& other) = delete;
 };
 
-template<typename T, typename Enabled = void>
-class params_array;
-
 template<typename T>
-class params_array<T, typename std::enable_if<HasToString<T>::value>::type> : public params_t<T, typename std::enable_if<HasToString<T>::value>::type> {
+class params_array : public params_t<T> {
 	typedef typename std::vector<T>::const_iterator it_type;
 	it_type arg_iter;
 	const it_type end_iter;
@@ -125,13 +119,10 @@ public:
 	}
 };
 
-template class params_array<std::string>;
-
-template<typename T, typename Enabled = void>
-class params_string;
+//template class params_array<std::string>;
 
 template<typename T>
-class params_string<T, typename std::enable_if<HasToString<T>::value>::type> : public params_t<T, typename std::enable_if<HasToString<T>::value>::type> {
+class params_string : public params_t<T> {
 	const char* cur_ptr;
 public:
 	params_string(const char* cur_ptr) : cur_ptr(cur_ptr) {}
@@ -147,8 +138,55 @@ public:
 		return ans;
 	}
 };
-template class params_string<std::string>;
+//template class params_string<std::string>;
 
+template<typename T, int N>
+class params_fixed : public params_t<T> {
+public:
+    params_fixed(const char* (&params)[N]) : params(params) { }
+    virtual bool end() const {
+		return pos == N;
+	}
+	virtual const char* next() {
+		if (end()) return *params;
+        const auto ans = *params;
+        if (pos < N - 1) {
+            ++params;
+        }
+            ++pos;
+        return ans;
+	}
+private:
+    const char** params;
+    int pos = 0;
+};
+
+template<class... Params>
+/// std::string*, RE::FixedString*  print("%d %d", "10`10`")
+typename std::string Fprintv(const char* format, const Params&... params) {
+    const char* param[]{ params.c_str()...};
+    constexpr int size = sizeof(param) / 8;
+    params_fixed<std::string, size> params_storage(param);
+	return Fprint(format, params_storage);
+}
+
+typename std::string Fprintv(const char* format) {
+	return format;
+}
+
+template<typename T>
+// std::string, RE::FixedString  print("%d %d", "10`10`")
+typename std::string Fprints(const char* format, const T& params) {
+	params_string<T> params_storage(params.c_str());
+	return Fprint(format, params_storage);
+}
+
+template<typename T>
+// std::vector<std::string, string[]  print("%d %d", {"10","10"})
+typename std::string Fprinta(const char* format, const typename std::vector<T> params) {
+    params_array<T> params_storage(params.begin(), params.end());
+	return Fprint(format, params_storage);
+}
 
 #define ihatecopying(__type) {                           \
     auto c = parse<TokenType::__type>(args.next(), defaultmode);      \
@@ -161,19 +199,7 @@ template class params_string<std::string>;
     break; }  
 
 template<typename T> 
-typename std::enable_if<HasToString<T>::value, std::string>::type Fprint(const char* format, const T params) {
-	params_string<T> params_storage(params.c_str());
-	return Fprint(format, params_storage);
-}
-
-template<typename T> 
-typename std::enable_if<HasToString<T>::value, std::string>::type Fprint(const char* format, const typename std::vector<T> params) {
-    params_array<T> params_storage(params.begin(), params.end());
-	return Fprint(format, params_storage);
-}
-
-template<typename T> 
-typename std::enable_if<HasToString<T>::value, std::string>::type Fprint(const char* cur, params_t<T>& args) {
+typename std::string Fprint(const char* cur, params_t<T>& args) {
     std::stringstream ss;
     TokenInfo info;
     bool defaultmode = false;
@@ -190,10 +216,12 @@ typename std::enable_if<HasToString<T>::value, std::string>::type Fprint(const c
         
         auto type = info.type;
         if (type != TokenType::string && type != TokenType::_char && type != TokenType::_float && type != TokenType::_int) {
+            // wrong type spec, skipping (like printf)
             continue;
         } else if (args.end()) {
-            defaultmode = true;
-            continue;
+            // params ends, just write rest (unlike printf)
+            ss << info.ans << cur;
+            break;
         }
 
         int a = 0, b = 0;
