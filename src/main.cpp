@@ -47,14 +47,25 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 	return true;
 }
 
-RE::BSFixedString PrintFArr(RE::StaticFunctionTag*, RE::BSFixedString format, const std::vector<RE::BSFixedString> params)
+template class params_array<RE::BSFixedString>;
+template class params_string<RE::BSFixedString>;
+
+RE::BSFixedString PrintFStr(RE::StaticFunctionTag*, const RE::BSFixedString format, const RE::BSFixedString params)
 {
-	return Fprint(format.c_str(), params);
+	params_string<RE::BSFixedString> params_storage(params.c_str());
+	return Fprint(format.c_str(), params_storage);
+}
+
+RE::BSFixedString PrintFArr(RE::StaticFunctionTag*, const RE::BSFixedString format, const std::vector<RE::BSFixedString> params)
+{
+	params_array<RE::BSFixedString> params_storage(params.begin(), params.end());
+	return Fprint(format.c_str(), params_storage);
 }
 
 bool RegisterFuncs(RE::BSScript::IVirtualMachine* a_vm)
 {
 	a_vm->RegisterFunction("PrintFArr", "f314PF_PrintF", PrintFArr);
+	a_vm->RegisterFunction("PrintFStr", "f314PF_PrintF", PrintFStr);
 	return true;
 }
 

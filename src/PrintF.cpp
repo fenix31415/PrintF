@@ -4,6 +4,14 @@
 #include <sstream>
 #include "sPrintF.h"
 
+//extern char const DELIM = '`';
+
+size_t fstrlen(const char* s) {
+    const char* const l = s;
+    while (*s && *s != '`') ++s;
+    return s - l;
+}
+
 static bool is_flag(char c) {
     return c == '-' || c == '+' || c == ' ' || c == '0' || c == '\'' || c == '#';
 }
