@@ -45,11 +45,10 @@ static void streamprint(std::stringstream& ss, const std::string& s, Args ... a)
 }
 
 template <TokenType T>
-static auto parse(const char* arg, bool defaultmode) { }
+static auto parse(const char* arg) { }
 
 template <>
-auto parse<TokenType::_int>(const char* arg, bool defaultmode) {
-    if (defaultmode) return 0;
+auto parse<TokenType::_int>(const char* arg) {
     char *endC;
     long i = strtol(arg, &endC, 10);
     if (!*endC || *endC == DELIM)
@@ -65,8 +64,7 @@ auto parse<TokenType::_int>(const char* arg, bool defaultmode) {
 }
 
 template <>
-auto parse<TokenType::_float>(const char* arg, bool defaultmode) {
-    if (defaultmode) return 0.0f;
+auto parse<TokenType::_float>(const char* arg) {
     char* endC;
     double d = strtof(arg, &endC);
     if (!*endC || *endC == DELIM) {
@@ -78,14 +76,13 @@ auto parse<TokenType::_float>(const char* arg, bool defaultmode) {
 }
 
 template <>
-auto parse<TokenType::_char>(const char* arg, bool defaultmode) {
+auto parse<TokenType::_char>(const char* arg) {
     const char def = ' ';
-    if (defaultmode) return def;
-    if (arg[1] == '\0' || arg[1] == DELIM) {
+    if (fstrlen(arg) == 1) {
         return arg[0];
     }
     else {
-        int ans = parse<TokenType::_int>(arg, defaultmode);
+        int ans = parse<TokenType::_int>(arg);
         return ans == 0 ? def : static_cast<char>(ans);
     }
 }
@@ -189,7 +186,7 @@ typename std::string Fprinta(const char* format, const typename std::vector<T> p
 }
 
 #define ihatecopying(__type) {                           \
-    auto c = parse<TokenType::__type>(args.next(), defaultmode);      \
+    auto c = parse<TokenType::__type>(args.next());      \
     switch (info.stars)                                  \
     {                                                    \
     case 1: streamprint(ss, info.ans, a, c); break;      \
@@ -202,7 +199,6 @@ template<typename T>
 typename std::string Fprint(const char* cur, params_t<T>& args) {
     std::stringstream ss;
     TokenInfo info;
-    bool defaultmode = false;
     while (*cur)
     {
         const char* l = cur;
@@ -226,14 +222,11 @@ typename std::string Fprint(const char* cur, params_t<T>& args) {
 
         int a = 0, b = 0;
         if (info.stars == 2) {
-            b = parse<TokenType::_int>(args.next(), defaultmode);
-            if (args.end()) defaultmode = true;
-            a = parse<TokenType::_int>(args.next(), defaultmode);
-            if (args.end()) defaultmode = true;
+            b = parse<TokenType::_int>(args.next());
+            a = parse<TokenType::_int>(args.next());
         }
         if (info.stars == 1) {
-            a = parse<TokenType::_int>(args.next(), defaultmode);
-            if (args.end()) defaultmode = true;
+            a = parse<TokenType::_int>(args.next());
         }
 
         switch (type)
@@ -242,30 +235,19 @@ typename std::string Fprint(const char* cur, params_t<T>& args) {
         case TokenType::_float: ihatecopying(_float)
         case TokenType::_char: ihatecopying(_char)
         case TokenType::string: {
-            if (defaultmode) {
-                switch (info.stars)
-                {
-                case 1: streamprint(ss, info.ans, a, ""); break;
-                case 2: streamprint(ss, info.ans, b, a, ""); break;
-                default:streamprint(ss, info.ans, ""); break;
-                }
+            auto c = args.next();
+            size_t len = fstrlen(c) + 1;
+            auto new_c = (char*)malloc(len);
+            if (!new_c) break;
+            memcpy(new_c, c, len - 1);
+            new_c[len - 1] = '\0';
+            switch (info.stars)
+            {
+            case 1: streamprint(ss, info.ans, a, new_c); break;
+            case 2: streamprint(ss, info.ans, b, a, new_c); break;
+            default:streamprint(ss, info.ans, new_c); break;
             }
-            else {
-                auto c = args.next();
-                if (args.end()) defaultmode = true;
-                size_t len = fstrlen(c) + 1;
-                auto new_c = (char*)malloc(len);
-                if (!new_c) break;
-                memcpy(new_c, c, len - 1);
-                new_c[len - 1] = '\0';
-                switch (info.stars)
-                {
-                case 1: streamprint(ss, info.ans, a, new_c); break;
-                case 2: streamprint(ss, info.ans, b, a, new_c); break;
-                default:streamprint(ss, info.ans, new_c); break;
-                }
-                free(new_c);
-            }
+            free(new_c);
             break;
         }
         default: break;
